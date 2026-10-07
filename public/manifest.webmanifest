@@ -1,11 +1,11 @@
 {
-  "name": "SOFT//ARCANA — Personal Tarot System",
+  "name": "Soft Arcana",
   "short_name": "Soft Arcana",
-  "description": "A personal tarot interpretation notebook and reading app.",
+  "description": "A haunting, illustrated tarot study notebook, reading room, and evolving personal card archive.",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#d8f5f0",
-  "theme_color": "#d8f5f0",
+  "background_color": "#171216",
+  "theme_color": "#5e4e5d",
   "icons": [
     {
       "src": "./icon.svg",
