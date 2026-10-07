@@ -1,0 +1,80 @@
+export const FAIRY_MESSAGES = [
+  'The door that refuses you may be the only door that knows your name.',
+  'Do not ask the river where it is going. Ask what in you is still standing on the bank.',
+  'A moth does not mistake the moon for an answer. It only lets the moon rearrange its flight.',
+  'What you call confusion may be two truths passing through the same narrow room.',
+  'The thing you keep trying to understand may be waiting for you to notice it instead.',
+  'If the mirror answered every question, no one would ever learn to turn around.',
+  'The smallest omen often arrives disguised as a preference.',
+  'There is a kind of knowing that becomes less true when spoken too quickly.',
+  'Leave one corner of the question unlit. Something shy may be living there.',
+  'The future is rarely hiding. More often, the present is speaking too softly.',
+  'A closed hand and an open hand can hold the same secret differently.',
+  'Do not improve the symbol. Let it remain stranger than you.',
+  'Some paths become visible only after you stop calling them paths.',
+  'The answer may not resemble relief. Listen anyway.',
+  'If you cannot tell whether it is a warning or an invitation, ask which one makes you more awake.',
+  'Nothing in the garden hurries, yet the garden changes completely.',
+  'Your first interpretation is a visitor. Your tenth may finally know where the cups are kept.',
+  'What repeats is not always asking to be solved. Sometimes it is asking to be witnessed.',
+  'The quiet image is not empty. It is waiting for your noise to leave the room.',
+  'A beautiful thing can still be a boundary.',
+]
+
+export const RITUAL_EXERCISES = [
+  {
+    id: 'breath-444',
+    title: 'Breathe the square',
+    kind: 'breath',
+    seconds: 24,
+    instruction: 'Inhale for four. Hold for four. Exhale for four. Rest for four. Repeat once.',
+  },
+  {
+    id: 'peripheral',
+    title: 'Widen the room',
+    kind: 'gaze',
+    seconds: 18,
+    instruction: 'Keep your eyes still. Without turning your head, notice the farthest thing you can see on the left, then on the right.',
+  },
+  {
+    id: 'three-words',
+    title: 'Break the sentence',
+    kind: 'words',
+    seconds: 18,
+    instruction: 'Read the three words without making a story. Let them remain separate objects.',
+    words: ['velvet', 'window', 'salt'],
+  },
+  {
+    id: 'reverse-object',
+    title: 'Make the familiar strange',
+    kind: 'prompt',
+    seconds: 20,
+    instruction: 'Choose one ordinary object near you. Imagine it has never been invented. What could it be instead?',
+  },
+  {
+    id: 'soft-focus',
+    title: 'Blur the edges',
+    kind: 'gaze',
+    seconds: 18,
+    instruction: 'Let your eyes soften until the screen is no longer the sharpest thing in the room. Notice color before objects.',
+  },
+  {
+    id: 'body-signal',
+    title: 'Ask without words',
+    kind: 'prompt',
+    seconds: 18,
+    instruction: 'Think of your question once. Then stop wording it. Notice where the question seems to live in the body.',
+  },
+  {
+    id: 'first-image',
+    title: 'Catch the first image',
+    kind: 'prompt',
+    seconds: 18,
+    instruction: 'Close your eyes for three breaths. When you open them, keep the first image or memory that appeared. Do not explain it.',
+  },
+]
+
+export const FLOATING_WORDS = [
+  'threshold', 'veil', 'moonmilk', 'garden', 'mirror', 'moth', 'velvet', 'omen', 'sleep', 'thorn',
+  'river', 'ashes', 'orchard', 'key', 'fog', 'lace', 'dream', 'bone', 'bell', 'milkglass', 'hush', 'door',
+]
