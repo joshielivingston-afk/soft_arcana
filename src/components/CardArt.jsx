@@ -159,7 +159,7 @@ export default function CardArt({ card, reversed = false, small = false, reveal 
       </div>
       <div className="morute-card-front">
         {hasHero ? <>
-          <div className="hero-card-image" role="img" aria-label={`${card.name} illustrated tarot card`} style={{ '--hero-index': heroIndex }}/>
+          <div className="hero-card-image" role="img" aria-label={`${card.name} illustrated tarot card`} style={{ '--hero-index': heroIndex, backgroundImage: "url('./cards/hero-sprite.webp')" }}/>
           <div className="hero-card-glaze"/>
         </> : <>
           <svg viewBox="0 0 180 260" role="img" aria-label={`${card.name} tarot card illustration`}>
