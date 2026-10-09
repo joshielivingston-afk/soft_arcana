@@ -1,5 +1,5 @@
-const CACHE = 'soft-arcana-v5-4-valid-art'
-const CORE = ["./","./index.html","./manifest.webmanifest","./icon.svg","./cards/major-00.webp","./cards/major-01.webp","./cards/major-02.webp","./cards/major-03.webp","./cards/major-13.webp","./cards/major-18.webp","./cards/cups-01.webp","./cards/swords-03.webp","./cards/wands-06.webp","./cards/pentacles-13.webp"]
+const CACHE = 'soft-arcana-v5-5-sharp-art'
+const CORE = ["./","./index.html","./manifest.webmanifest","./icon.svg","./cards/hero-pair-0.avif","./cards/hero-pair-1.avif","./cards/hero-pair-2.avif","./cards/hero-pair-3.avif","./cards/hero-pair-4.avif"]
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(CORE)))
