@@ -160,12 +160,14 @@ function Bedroom({ onEnter, music, onMusic }) {
   </main>
 }
 
-function PolishMirror({ interpretations, onRemember, onReturn, music, onMusic }) {
+function PolishMirror({ interpretations, beneath, wear, onRemember, onLeave, onEncounter, onReturn, music, onMusic }) {
   const [filter, setFilter] = useState('all')
   const [card, setCard] = useState(null)
   const [draft, setDraft] = useState('')
-  const [drawer, setDrawer] = useState('traditional')
+  const [drawer, setDrawer] = useState(null)
   const [sealing, setSealing] = useState(false)
+  const [leaving, setLeaving] = useState(false)
+  const [clouding, setClouding] = useState(false)
   const queueRef = useRef([])
 
   const resetQueue = (nextFilter = filter) => {
@@ -173,10 +175,13 @@ function PolishMirror({ interpretations, onRemember, onReturn, music, onMusic })
   }
 
   useEffect(() => {
+    setClouding(true)
     resetQueue(filter)
     setCard(null)
     setDraft('')
-    setDrawer('traditional')
+    setDrawer(null)
+    const timer = window.setTimeout(() => setClouding(false), 650)
+    return () => window.clearTimeout(timer)
   }, [filter])
 
   const draw = () => {
@@ -187,9 +192,10 @@ function PolishMirror({ interpretations, onRemember, onReturn, music, onMusic })
       queueRef.current.push(next)
       next = queueRef.current.shift()
     }
+    onEncounter(next)
     setCard(next)
     setDraft('')
-    setDrawer('traditional')
+    setDrawer(null)
   }
 
   const remember = () => {
@@ -199,8 +205,21 @@ function PolishMirror({ interpretations, onRemember, onReturn, music, onMusic })
       onRemember(card, draft.trim())
       setCard(null)
       setDraft('')
+      setDrawer(null)
       setSealing(false)
-    }, 1050)
+    }, 3000)
+  }
+
+  const leaveBeneath = () => {
+    if (!card || sealing || leaving) return
+    setLeaving(true)
+    window.setTimeout(() => {
+      onLeave(card)
+      setCard(null)
+      setDraft('')
+      setDrawer(null)
+      setLeaving(false)
+    }, 1200)
   }
 
   const history = card ? (interpretations[card.id] || []) : []
@@ -221,7 +240,8 @@ function PolishMirror({ interpretations, onRemember, onReturn, music, onMusic })
         >{label}</button>)}
       </div>
 
-      <section className={'polish-stage ' + (sealing ? 'is-sealing' : '')}>
+      <section className={'polish-stage ' + (sealing ? 'is-sealing ' : '') + (leaving ? 'is-leaving ' : '') + (clouding ? 'is-clouding' : '')}>
+        {clouding && <div className="mirror-cloud" aria-hidden="true"><i /><i /><i /></div>}
         {!card ? <div className="deck-choice">
           <button className="deck-touch" onClick={draw} aria-label="flip the top card">
             <MirrorBack />
@@ -229,7 +249,7 @@ function PolishMirror({ interpretations, onRemember, onReturn, music, onMusic })
           </button>
           <button className="keep-polishing" onClick={draw}>keep polishing</button>
         </div> : <div className="polish-encounter">
-          <div className="polish-card-wrap"><CardArt card={card} /></div>
+          <div className="polish-card-wrap"><CardArt card={card} wear={wear[card.id] || 0} /></div>
           <div className="memory-paper">
             <small>{card.name}</small>
             <h2>what do you see this time?</h2>
@@ -241,12 +261,12 @@ function PolishMirror({ interpretations, onRemember, onReturn, music, onMusic })
             <button className="remember-button" disabled={!draft.trim()} onClick={remember}>remember</button>
 
             <div className="dream-tabs">
-              <button className={drawer === 'traditional' ? 'active' : ''} onClick={() => setDrawer('traditional')}>traditional dream</button>
-              <button className={drawer === 'old' ? 'active' : ''} onClick={() => setDrawer('old')}>my old dreams</button>
+              <button className={drawer === 'traditional' ? 'active' : ''} onClick={() => setDrawer(drawer === 'traditional' ? null : 'traditional')}>traditional dream</button>
+              <button className={drawer === 'old' ? 'active' : ''} onClick={() => setDrawer(drawer === 'old' ? null : 'old')}>my old dreams</button>
             </div>
 
-            <div className="dream-drawer">
-              {drawer === 'traditional' ? <article>
+            {drawer && <div className="dream-drawer">
+              {drawer === 'traditional' ? <article className="traditional-slip">
                 <b>{card.keywords}</b>
                 <p>{card.upright}</p>
                 <small>reversed / shadow</small>
@@ -254,16 +274,20 @@ function PolishMirror({ interpretations, onRemember, onReturn, music, onMusic })
                 <p>{card.reversed}</p>
               </article> : <div className="old-dreams">
                 {!history.length && <p className="empty-dream">Nothing remembered yet.</p>}
-                {[...history].reverse().map((entry, index) => <article key={entry.id || index}>
-                  <header><b>dream {history.length - index}</b><time>{dateLabel(entry.createdAt)}</time></header>
-                  <p>{memoryText(entry)}</p>
-                </article>)}
+                {[...history].reverse().map((entry, index) => <details className="dream-slip" key={entry.id || index}>
+                  <summary><b>dream {history.length - index}</b><time>{dateLabel(entry.createdAt)}</time></summary>
+                  <div className="dream-slip-paper"><p>{memoryText(entry)}</p></div>
+                </details>)}
               </div>}
-            </div>
+            </div>}
           </div>
 
-          <button className="skip-polish" onClick={draw}>keep polishing</button>
+          <div className="polish-after-actions">
+            <button className="beneath-button" onClick={leaveBeneath}>leave beneath the mirror</button>
+            <button className="skip-polish" onClick={draw}>keep polishing</button>
+          </div>
 
+          {leaving && <div className="beneath-motion" aria-hidden="true"><span className="ribbon">silk</span></div>}
           {sealing && <div className="seal-bundle" aria-hidden="true">
             <div className="folding-paper">
               <i className="fold fold-left" />
@@ -278,7 +302,7 @@ function PolishMirror({ interpretations, onRemember, onReturn, music, onMusic })
   </div>
 }
 
-function LookMirror({ onRememberReading, onReturn, music, onMusic }) {
+function LookMirror({ wear, onEncounter, onRememberReading, onReturn, music, onMusic }) {
   const [deck, setDeck] = useState(() => shuffle(TAROT_CARDS))
   const [cards, setCards] = useState([])
   const [phase, setPhase] = useState('ready')
@@ -309,6 +333,7 @@ function LookMirror({ onRememberReading, onReturn, music, onMusic }) {
     let nextDeck = deck
     if (!nextDeck.length) nextDeck = shuffle(TAROT_CARDS)
     const next = nextDeck[0]
+    onEncounter(next)
     setDeck(nextDeck.slice(1))
     setCards([...cards, { card: next, reversed: false }])
     setNote('')
@@ -342,7 +367,7 @@ function LookMirror({ onRememberReading, onReturn, music, onMusic }) {
           <button className="deck-touch draw-deck" onClick={draw}><MirrorBack /><span>touch the deck</span></button>
           <button className="shuffle-button" onClick={shuffleDeck}>shuffle & cut</button>
         </>}
-        {phase === 'shuffling' && <div className="shuffle-animation">
+        {phase === 'shuffling' && <div className="shuffle-animation"><div className="mirror-cloud shuffle-reflection" aria-hidden="true"><i /><i /><i /></div>
           <MirrorBack className="shuffle-card a" />
           <MirrorBack className="shuffle-card b" />
           <MirrorBack className="shuffle-card c" />
@@ -360,7 +385,7 @@ function LookMirror({ onRememberReading, onReturn, music, onMusic }) {
       {!!cards.length && <>
         <section className="draw-carousel">
           {cards.map((item, index) => <article key={index} className="drawn-mirror-card">
-            <CardArt card={item.card} />
+            <CardArt card={item.card} wear={wear[item.card.id] || 0} />
             <small>{index + 1}</small>
           </article>)}
           {cards.length < 10 && <button className="draw-another" onClick={draw}>
@@ -383,13 +408,13 @@ function LookMirror({ onRememberReading, onReturn, music, onMusic }) {
   </div>
 }
 
-function CardDreamSheet({ card, history, onClose }) {
+function CardDreamSheet({ card, history, wear = 0, onClose }) {
   const [drawer, setDrawer] = useState('old')
   return <div className="modal" onMouseDown={onClose}>
     <section className="dream-sheet" onMouseDown={(event) => event.stopPropagation()}>
       <button className="close" onClick={onClose}>×</button>
       <div className="sheet-top">
-        <CardArt card={card} />
+        <CardArt card={card} wear={wear} />
         <div>
           <small>{card.suit}</small>
           <h2>{card.name}</h2>
@@ -400,20 +425,24 @@ function CardDreamSheet({ card, history, onClose }) {
         </div>
       </div>
       <div className="dream-drawer sheet-drawer">
-        {drawer === 'traditional' ? <article><b>{card.keywords}</b><p>{card.upright}</p><small>reversed / shadow</small><b>{card.reversedKeywords}</b><p>{card.reversed}</p></article> : <div className="old-dreams">
-          {[...history].reverse().map((entry, index) => <article key={entry.id || index}><header><b>dream {history.length - index}</b><time>{dateLabel(entry.createdAt)}</time></header><p>{memoryText(entry)}</p></article>)}
+        {drawer === 'traditional' ? <article className="traditional-slip"><b>{card.keywords}</b><p>{card.upright}</p><small>reversed / shadow</small><b>{card.reversedKeywords}</b><p>{card.reversed}</p></article> : <div className="old-dreams">
+          {[...history].reverse().map((entry, index) => <details className="dream-slip" key={entry.id || index}><summary><b>dream {history.length - index}</b><time>{dateLabel(entry.createdAt)}</time></summary><div className="dream-slip-paper"><p>{memoryText(entry)}</p></div></details>)}
         </div>}
       </div>
     </section>
   </div>
 }
 
-function OpenMirror({ interpretations, readings, onReturn, music, onMusic }) {
-  const [rememberedOnly, setRememberedOnly] = useState(false)
+function OpenMirror({ interpretations, readings, beneath, wear, onReturn, music, onMusic }) {
+  const [archiveFilter, setArchiveFilter] = useState('all')
   const [mode, setMode] = useState('cards')
   const [selected, setSelected] = useState(null)
 
-  const cards = rememberedOnly ? TAROT_CARDS.filter((card) => (interpretations[card.id] || []).length) : TAROT_CARDS
+  const cards = archiveFilter === 'remembered'
+    ? TAROT_CARDS.filter((card) => (interpretations[card.id] || []).length)
+    : archiveFilter === 'beneath'
+      ? TAROT_CARDS.filter((card) => beneath[card.id])
+      : TAROT_CARDS
   const mirrorReadings = readings.filter((reading) => reading.note && DRAW_COUNTS.includes(reading.cards?.length || reading.mirrorCount))
 
   return <div className="mirror-room open-room">
@@ -430,24 +459,28 @@ function OpenMirror({ interpretations, readings, onReturn, music, onMusic }) {
       </div>
 
       {mode === 'cards' ? <>
-        <label className="remembered-toggle">
-          <input type="checkbox" checked={rememberedOnly} onChange={(event) => setRememberedOnly(event.target.checked)} />
-          <span />
-          remembered only
-        </label>
+        <div className="archive-filters">
+          <button className={archiveFilter === 'all' ? 'active' : ''} onClick={() => setArchiveFilter('all')}>all</button>
+          <button className={archiveFilter === 'remembered' ? 'active' : ''} onClick={() => setArchiveFilter('remembered')}>remembered</button>
+          <button className={archiveFilter === 'beneath' ? 'active' : ''} onClick={() => setArchiveFilter('beneath')}>beneath the mirror</button>
+        </div>
 
         <section className="card-carousel">
           {cards.map((card) => {
             const history = interpretations[card.id] || []
             const remembered = history.length > 0
+            const waiting = Boolean(beneath[card.id])
             return <button
               key={card.id}
-              className={'archive-card-tile ' + (remembered ? 'is-remembered' : 'is-unremembered')}
+              className={'archive-card-tile ' + (waiting ? 'is-beneath' : remembered ? 'is-remembered' : 'is-unremembered')}
               onClick={() => remembered && setSelected(card)}
             >
-              {remembered ? <CardArt card={card} /> : <MirrorBack />}
-              <b>{remembered ? card.name : 'unremembered'}</b>
-              <small>{remembered ? history.length + ' dream' + (history.length === 1 ? '' : 's') : 'still behind the glass'}</small>
+              <div className="archive-card-object">
+                {waiting && <span className="beneath-ribbon" aria-hidden="true" />}
+                {waiting || !remembered ? <MirrorBack /> : <CardArt card={card} wear={wear[card.id] || 0} />}
+              </div>
+              <b>{waiting ? card.name : remembered ? card.name : 'unremembered'}</b>
+              <small>{waiting ? 'waiting beneath the mirror' : remembered ? history.length + ' dream' + (history.length === 1 ? '' : 's') : 'still behind the glass'}</small>
             </button>
           })}
         </section>
@@ -469,7 +502,7 @@ function OpenMirror({ interpretations, readings, onReturn, music, onMusic }) {
         })}
       </section>}
 
-      {selected && <CardDreamSheet card={selected} history={interpretations[selected.id] || []} onClose={() => setSelected(null)} />}
+      {selected && <CardDreamSheet card={selected} history={interpretations[selected.id] || []} wear={wear[selected.id] || 0} onClose={() => setSelected(null)} />}
     </main>
   </div>
 }
@@ -484,7 +517,7 @@ const download = (text, name, type) => {
   URL.revokeObjectURL(url)
 }
 
-function DownloadMirror({ interpretations, combos, readings, study, onImport, onReturn, music, onMusic }) {
+function DownloadMirror({ interpretations, combos, readings, study, beneath, wear, onImport, onReturn, music, onMusic }) {
   const input = useRef(null)
   const remembered = Object.values(interpretations).filter((items) => items?.length).length
 
@@ -509,6 +542,8 @@ function DownloadMirror({ interpretations, combos, readings, study, onImport, on
     combinationHistory: combos,
     readings,
     study,
+    beneath,
+    wear,
   })
 
   const exportJson = () => download(
@@ -574,6 +609,8 @@ export default function App() {
   const [combos, setCombos] = useState(() => storage.getCombinationHistory())
   const [readings, setReadings] = useState(() => storage.getReadings())
   const [study, setStudy] = useState(() => storage.getStudy())
+  const [beneath, setBeneath] = useState(() => storage.getBeneath())
+  const [wear, setWear] = useState(() => storage.getWear())
   const [prefs, setPrefs] = useState(() => storage.getPreferences())
   const [toast, setToast] = useState('')
 
@@ -602,7 +639,27 @@ export default function App() {
     }
     setInterpretations(next)
     storage.setInterpretations(next)
+    if (beneath[card.id]) {
+      const nextBeneath = { ...beneath }
+      delete nextBeneath[card.id]
+      setBeneath(nextBeneath)
+      storage.setBeneath(nextBeneath)
+    }
     flash('SEALED IN THE MIRROR')
+  }
+
+  const encounterCard = (card) => {
+    if (!card) return
+    const next = { ...wear, [card.id]: (wear[card.id] || 0) + 1 }
+    setWear(next)
+    storage.setWear(next)
+  }
+
+  const leaveBeneath = (card) => {
+    const next = { ...beneath, [card.id]: { createdAt: new Date().toISOString() } }
+    setBeneath(next)
+    storage.setBeneath(next)
+    flash('LEFT BENEATH THE MIRROR')
   }
 
   const rememberReading = (reading) => {
@@ -617,6 +674,8 @@ export default function App() {
     setCombos(storage.getCombinationHistory())
     setReadings(storage.getReadings())
     setStudy(storage.getStudy())
+    setBeneath(storage.getBeneath())
+    setWear(storage.getWear())
     flash('THE OLD MIRROR OPENED')
   }
 
@@ -624,10 +683,10 @@ export default function App() {
 
   return <div className="app-shell">
     {screen === 'bedroom' && <Bedroom onEnter={setScreen} music={prefs.music} onMusic={toggleMusic} />}
-    {screen === 'look' && <LookMirror onRememberReading={rememberReading} onReturn={returnToBedroom} music={prefs.music} onMusic={toggleMusic} />}
-    {screen === 'polish' && <PolishMirror interpretations={interpretations} onRemember={rememberCard} onReturn={returnToBedroom} music={prefs.music} onMusic={toggleMusic} />}
-    {screen === 'open' && <OpenMirror interpretations={interpretations} readings={readings} onReturn={returnToBedroom} music={prefs.music} onMusic={toggleMusic} />}
-    {screen === 'download' && <DownloadMirror interpretations={interpretations} combos={combos} readings={readings} study={study} onImport={reload} onReturn={returnToBedroom} music={prefs.music} onMusic={toggleMusic} />}
+    {screen === 'look' && <LookMirror wear={wear} onEncounter={encounterCard} onRememberReading={rememberReading} onReturn={returnToBedroom} music={prefs.music} onMusic={toggleMusic} />}
+    {screen === 'polish' && <PolishMirror interpretations={interpretations} beneath={beneath} wear={wear} onRemember={rememberCard} onLeave={leaveBeneath} onEncounter={encounterCard} onReturn={returnToBedroom} music={prefs.music} onMusic={toggleMusic} />}
+    {screen === 'open' && <OpenMirror interpretations={interpretations} readings={readings} beneath={beneath} wear={wear} onReturn={returnToBedroom} music={prefs.music} onMusic={toggleMusic} />}
+    {screen === 'download' && <DownloadMirror interpretations={interpretations} combos={combos} readings={readings} study={study} beneath={beneath} wear={wear} onImport={reload} onReturn={returnToBedroom} music={prefs.music} onMusic={toggleMusic} />}
     {ritual && <Threshold music={prefs.music} setMusic={setMusic} onDone={() => setRitual(false)} />}
     {toast && <div className="toast">{toast}</div>}
   </div>
