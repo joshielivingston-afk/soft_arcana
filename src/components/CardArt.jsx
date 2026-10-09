@@ -9,16 +9,16 @@ const PALETTES = {
 }
 
 const HERO_ART = {
-  'major-00': './cards/major-00.webp',
-  'major-01': './cards/major-01.webp',
-  'major-02': './cards/major-02.webp',
-  'major-03': './cards/major-03.webp',
-  'major-13': './cards/major-13.webp',
-  'major-18': './cards/major-18.webp',
-  'cups-01': './cards/cups-01.webp',
-  'swords-03': './cards/swords-03.webp',
-  'wands-06': './cards/wands-06.webp',
-  'pentacles-13': './cards/pentacles-13.webp',
+  'major-00': './cards/major-00.webp?v=5',
+  'major-01': './cards/major-01.webp?v=5',
+  'major-02': './cards/major-02.webp?v=5',
+  'major-03': './cards/major-03.webp?v=5',
+  'major-13': './cards/major-13.webp?v=5',
+  'major-18': './cards/major-18.webp?v=5',
+  'cups-01': './cards/cups-01.webp?v=5',
+  'swords-03': './cards/swords-03.webp?v=5',
+  'wands-06': './cards/wands-06.webp?v=5',
+  'pentacles-13': './cards/pentacles-13.webp?v=5',
 }
 const MAJOR_SCENES = [
   ['cliff', 'white moth', 'tiny suitcase'],
