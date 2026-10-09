@@ -140,6 +140,7 @@ function Bedroom({ onEnter, music, onMusic }) {
 
   return <main className="bedroom">
     <MusicButton on={music} onToggle={onMusic} />
+    <div className="bedroom-reflection" />
     <header>
       <small>the bedroom</small>
       <h1>SOFT ARCANA</h1>
@@ -166,7 +167,6 @@ function PolishMirror({ interpretations, beneath, wear, onRemember, onLeave, onE
   const [drawer, setDrawer] = useState(null)
   const [sealing, setSealing] = useState(false)
   const [leaving, setLeaving] = useState(false)
-  const [clouding, setClouding] = useState(false)
   const queueRef = useRef([])
 
   const resetQueue = (nextFilter = filter) => {
@@ -174,13 +174,10 @@ function PolishMirror({ interpretations, beneath, wear, onRemember, onLeave, onE
   }
 
   useEffect(() => {
-    setClouding(true)
     resetQueue(filter)
     setCard(null)
     setDraft('')
     setDrawer(null)
-    const timer = window.setTimeout(() => setClouding(false), 650)
-    return () => window.clearTimeout(timer)
   }, [filter])
 
   const draw = () => {
@@ -239,8 +236,7 @@ function PolishMirror({ interpretations, beneath, wear, onRemember, onLeave, onE
         >{label}</button>)}
       </div>
 
-      <section className={'polish-stage ' + (sealing ? 'is-sealing ' : '') + (leaving ? 'is-leaving ' : '') + (clouding ? 'is-clouding' : '')}>
-        {clouding && <div className="mirror-cloud" aria-hidden="true"><i /><i /><i /></div>}
+      <section className={'polish-stage ' + (sealing ? 'is-sealing ' : '') + (leaving ? 'is-leaving ' : '')}>
         {!card ? <div className="deck-choice">
           <button className="deck-touch" onClick={draw} aria-label="flip the top card">
             <MirrorBack />
