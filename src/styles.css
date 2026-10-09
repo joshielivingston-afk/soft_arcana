@@ -510,3 +510,195 @@ textarea{resize:vertical}
   .modal{align-items:center;padding:28px}.dream-sheet{border-radius:20px;max-height:90vh}
   .bedroom-entry.large{height:182px}.bedroom-entry.small{height:122px}
 }
+
+
+/* v0.5.1 — touched glass */
+.polish-stage{position:relative;overflow:hidden}
+.mirror-cloud{
+  position:absolute;inset:-12%;z-index:30;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 30% 45%,rgba(224,226,230,.15),transparent 30%),
+    radial-gradient(ellipse at 68% 58%,rgba(144,137,150,.18),transparent 34%),
+    linear-gradient(110deg,transparent 10%,rgba(211,213,220,.08) 48%,transparent 78%);
+  backdrop-filter:blur(11px);
+  opacity:0;
+  animation:mirrorCloud .65s ease-in-out forwards;
+}
+.mirror-cloud i{
+  position:absolute;border-radius:50%;filter:blur(12px);
+  background:rgba(217,218,224,.1);animation:cloudDrift 1.8s ease-in-out infinite alternate
+}
+.mirror-cloud i:nth-child(1){width:48%;height:22%;left:2%;top:32%}
+.mirror-cloud i:nth-child(2){width:36%;height:28%;right:4%;top:22%;animation-delay:-.7s}
+.mirror-cloud i:nth-child(3){width:52%;height:25%;left:26%;bottom:18%;animation-delay:-1.2s}
+.shuffle-reflection{inset:-18%;z-index:1;animation-duration:1s}
+.shuffle-animation>.standalone-mirror-back,.shuffle-animation>small{z-index:2}
+
+/* cards remember touch */
+.wear-overlay{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden;border-radius:inherit}
+.wear-scuff{position:absolute;display:block;border:1px solid rgba(244,236,229,.16);opacity:.35;filter:blur(.15px)}
+.wear-scuff.one{width:46%;height:11%;left:-7%;top:18%;border-radius:50%;transform:rotate(-24deg)}
+.wear-scuff.two{width:30%;height:7%;right:-4%;bottom:16%;border-radius:50%;transform:rotate(18deg)}
+.wear-crease{
+  position:absolute;display:block;left:7%;top:4%;width:1px;height:92%;
+  background:linear-gradient(transparent,rgba(238,229,221,.15),rgba(52,37,46,.2),transparent);
+  transform:rotate(3deg);opacity:.2
+}
+.wear-fleck{
+  position:absolute;right:10%;top:13%;width:7px;height:7px;border-radius:50%;
+  background:rgba(91,64,71,.38);
+  box-shadow:-19px 11px 0 -2px rgba(95,69,75,.25),8px 28px 0 -2px rgba(103,72,79,.3),-42px 60px 0 -2px rgba(106,77,81,.2)
+}
+.wear-flower{
+  position:absolute;left:8%;bottom:7%;font-style:normal;font-size:17px;
+  color:rgba(112,82,90,.45);transform:rotate(-19deg);
+  filter:sepia(.35) blur(.1px)
+}
+.wear-1 .morute-card-front{filter:saturate(.98) brightness(.995)}
+.wear-2 .morute-card-front{filter:saturate(.94) contrast(.99)}
+.wear-2 .wear-scuff{opacity:.48}.wear-2 .wear-crease{opacity:.38}
+.wear-3 .morute-card-front{filter:saturate(.9) contrast(.98) sepia(.035)}
+.wear-3 .wear-scuff{opacity:.58}.wear-3 .wear-crease{opacity:.5}
+.wear-4 .morute-card-front{filter:saturate(.86) contrast(.97) sepia(.07)}
+.wear-4 .wear-overlay{box-shadow:inset 0 0 14px rgba(39,27,33,.24)}
+.wear-4 .wear-scuff{opacity:.68}.wear-4 .wear-crease{opacity:.62}
+
+/* old dreams as folded slips */
+.old-dreams{gap:11px}
+.dream-slip{
+  position:relative;
+  border:1px solid rgba(213,205,205,.18);
+  background:
+    linear-gradient(150deg,rgba(219,207,207,.13),rgba(128,110,117,.06)),
+    rgba(29,23,29,.72);
+  border-radius:2px 9px 3px 8px;
+  box-shadow:2px 5px 12px rgba(0,0,0,.18);
+  transform:rotate(var(--slip-tilt,0deg));
+  overflow:hidden
+}
+.dream-slip:nth-of-type(3n+1){--slip-tilt:-.35deg}
+.dream-slip:nth-of-type(3n+2){--slip-tilt:.28deg}
+.dream-slip summary{
+  list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:12px 13px;color:#c8c0c6;font-size:9px;cursor:pointer;
+  background:linear-gradient(90deg,rgba(255,255,255,.025),transparent)
+}
+.dream-slip summary::-webkit-details-marker{display:none}
+.dream-slip summary:before{content:"◇";color:#857982;margin-right:7px}
+.dream-slip[open] summary:before{content:"◆"}
+.dream-slip-paper{
+  position:relative;padding:13px 14px 17px;
+  border-top:1px dashed rgba(212,204,205,.15);
+  background:linear-gradient(165deg,rgba(198,184,185,.08),rgba(255,255,255,.018));
+  animation:unfoldSlip .58s cubic-bezier(.2,.75,.2,1)
+}
+.dream-slip-paper:after{
+  content:"";position:absolute;left:5%;right:5%;top:48%;
+  border-top:1px solid rgba(224,216,216,.055)
+}
+.dream-slip-paper p{position:relative;z-index:1;margin:0}
+.traditional-slip{animation:unfoldSlip .5s cubic-bezier(.2,.75,.2,1)}
+
+/* leave beneath the mirror */
+.polish-after-actions{
+  grid-column:2;display:flex;justify-content:space-between;align-items:center;gap:12px
+}
+.polish-after-actions button{border:0;background:none;font-size:10px;font-style:italic;text-decoration:underline}
+.beneath-button{color:#aaa1aa}
+.skip-polish{grid-column:auto;color:#827a83}
+.beneath-motion{
+  position:absolute;z-index:22;left:4%;top:48%;width:30%;height:18%;
+  border-top:1px solid rgba(212,218,222,.18);
+  transform:rotate(-4deg);pointer-events:none
+}
+.beneath-motion:after{
+  content:"";position:absolute;left:8%;right:8%;top:5px;height:42px;
+  background:linear-gradient(rgba(15,12,16,.92),transparent);
+  filter:blur(4px)
+}
+.beneath-motion .ribbon{
+  position:absolute;z-index:2;left:42%;top:-8px;width:62px;height:14px;
+  color:transparent;background:linear-gradient(90deg,#6c3f56,#a6778d,#573044);
+  border-radius:50% 12% 50% 10%;transform:rotate(8deg);
+  box-shadow:0 2px 6px rgba(0,0,0,.3)
+}
+.is-leaving .polish-card-wrap{animation:cardUnderMirror 1.2s cubic-bezier(.55,.04,.45,.96) forwards}
+.is-leaving .memory-paper,.is-leaving .polish-after-actions{animation:softVanish .65s ease forwards}
+.archive-filters{display:flex;gap:6px;overflow:auto;margin:0 0 12px;scrollbar-width:none}
+.archive-filters::-webkit-scrollbar{display:none}
+.archive-filters button{
+  white-space:nowrap;border:1px solid rgba(204,211,216,.14);
+  color:#817a83;background:rgba(255,255,255,.02);
+  border-radius:99px;padding:6px 10px;font-size:9px
+}
+.archive-filters button.active{color:#eee8ec;border-color:rgba(220,225,229,.34);background:rgba(125,105,120,.16)}
+.archive-card-object{position:relative}
+.beneath-ribbon{
+  position:absolute;z-index:8;right:6%;bottom:-3px;width:38%;height:16px;
+  background:linear-gradient(90deg,#553148,#a16c83,#66394f);
+  transform:rotate(-6deg);border-radius:10% 65% 10% 60%;
+  box-shadow:0 3px 7px rgba(0,0,0,.35)
+}
+.beneath-ribbon:after{
+  content:"";position:absolute;right:2px;bottom:-7px;width:14px;height:18px;
+  background:#74445b;clip-path:polygon(0 0,100% 0,55% 100%)
+}
+.is-beneath .standalone-mirror-back{
+  transform:translateY(3px) rotate(-1.1deg);
+  box-shadow:0 13px 35px rgba(0,0,0,.42)
+}
+
+/* slower, ceremonial sealing */
+.seal-bundle{animation:bundleAwaySensual 3s cubic-bezier(.42,0,.19,1) forwards}
+.folding-paper{
+  animation:paperWrapSensual .8s cubic-bezier(.2,.72,.18,1) forwards;
+  transform-style:preserve-3d;perspective:900px
+}
+.fold-left{animation:foldLeftSensual .72s .55s cubic-bezier(.4,0,.2,1) forwards}
+.fold-right{animation:foldRightSensual .72s .88s cubic-bezier(.4,0,.2,1) forwards}
+.fold-top{animation:foldTopSensual .8s 1.18s cubic-bezier(.4,0,.2,1) forwards}
+.wax-seal{animation:waxStampSensual .72s 1.82s cubic-bezier(.18,.82,.25,1) forwards}
+
+/* reflections replace mechanical waiting */
+.look-room,.polish-room,.open-room{position:relative}
+.is-clouding .deck-choice,.is-clouding .polish-encounter{filter:blur(2px);opacity:.52}
+
+@keyframes mirrorCloud{
+  0%{opacity:0;transform:scale(.94)}
+  35%{opacity:.95}
+  100%{opacity:0;transform:scale(1.05)}
+}
+@keyframes cloudDrift{to{transform:translate(14px,-8px) scale(1.12)}}
+@keyframes unfoldSlip{
+  from{opacity:.1;transform:perspective(500px) rotateX(-38deg) translateY(-7px);transform-origin:top}
+  to{opacity:1;transform:none}
+}
+@keyframes cardUnderMirror{
+  0%{transform:translateY(0) rotate(0);opacity:1}
+  45%{transform:translateY(42px) rotate(-4deg) scale(.96);opacity:1}
+  100%{transform:translateY(190px) rotate(-7deg) scale(.76);opacity:0}
+}
+@keyframes softVanish{to{opacity:0;filter:blur(5px);transform:translateY(7px)}}
+@keyframes paperWrapSensual{
+  0%{transform:scale(.72) translateY(12px);opacity:0}
+  55%{transform:scale(1.015);opacity:1}
+  100%{transform:scale(1);opacity:1}
+}
+@keyframes foldLeftSensual{to{transform:translateX(44%) rotateY(69deg)}}
+@keyframes foldRightSensual{to{transform:translateX(-44%) rotateY(-69deg)}}
+@keyframes foldTopSensual{to{transform:translateY(40%) rotateX(-61deg)}}
+@keyframes waxStampSensual{
+  0%{transform:translate(-50%,-50%) scale(0);opacity:0}
+  55%{transform:translate(-50%,-50%) scale(1.26);opacity:1}
+  76%{transform:translate(-50%,-50%) scale(.94)}
+  100%{transform:translate(-50%,-50%) scale(1)}
+}
+@keyframes bundleAwaySensual{
+  0%,76%{transform:translateX(0) translateY(0) rotate(0) scale(1);opacity:1}
+  88%{transform:translateX(20vw) translateY(8px) rotate(2deg) scale(.96);opacity:.94}
+  100%{transform:translateX(125vw) translateY(18px) rotate(8deg) scale(.8);opacity:0}
+}
+
+@media(max-width:720px){
+  .polish-after-actions{grid-column:1/-1;margin-top:9px}
+}
