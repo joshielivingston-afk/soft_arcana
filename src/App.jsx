@@ -1,93 +1,634 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { TAROT_CARDS } from './data/tarot.js'
-import { SPREADS } from './data/spreads.js'
-import { FAIRY_MESSAGES, FLOATING_WORDS, RITUAL_EXERCISES } from './data/ritual.js'
-import { learningFor, SOURCE_NOTE } from './data/learning.js'
+import { FAIRY_MESSAGES, RITUAL_EXERCISES } from './data/ritual.js'
+import { SOURCE_NOTE } from './data/learning.js'
 import { storage } from './lib/storage.js'
 import { startAmbient, stopAmbient } from './lib/ambient.js'
-import CardArt from './components/CardArt.jsx'
+import CardArt, { MirrorBack } from './components/CardArt.jsx'
 
-const uid=()=>`${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`
-const rnd=a=>a[Math.floor(Math.random()*a.length)]
-const shuffle=a=>{const b=[...a];for(let i=b.length-1;i;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
-const dateLabel=iso=>new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(iso))
-const comboKey=cards=>cards.map(x=>x.card.id).sort().join('::')
+const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8)
+const rnd = (items) => items[Math.floor(Math.random() * items.length)]
+const shuffle = (items) => {
+  const copy = [...items]
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy
+}
+const dateLabel = (iso) => new Intl.DateTimeFormat(undefined, {
+  month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'
+}).format(new Date(iso))
 
-function Button({children,variant='ink',...props}){return <button className={`ink-button ${variant}`} {...props}>{children}</button>}
-function MusicButton({on,onToggle}){return <button className="music-button" onClick={onToggle}>{on?'♫':'♩'} <span>{on?'sound on':'sound off'}</span></button>}
+const MEMORY_FILTERS = [
+  ['all', 'all cards'],
+  ['major', 'major arcana'],
+  ['minor', 'minor arcana'],
+  ['cups', 'cups'],
+  ['swords', 'swords'],
+  ['wands', 'wands'],
+  ['pentacles', 'pentacles'],
+]
 
-function Threshold({music,setMusic,onDone}){
-  const [step,setStep]=useState(0)
-  const exercises=useMemo(()=>shuffle(RITUAL_EXERCISES).slice(0,2),[])
-  const message=useMemo(()=>rnd(FAIRY_MESSAGES),[])
-  const words=useMemo(()=>shuffle(FLOATING_WORDS).slice(0,14),[])
-  const toggle=async()=>{const n=!music;setMusic(n);n?await startAmbient():stopAmbient()}
-  const begin=async()=>{if(music)await startAmbient();setStep(1)}
-  if(step===0)return <div className="threshold threshold-home">
-    <div className="ghosts"><img src="./cards/major-18.webp"/><img src="./cards/major-02.webp"/><img src="./cards/cups-01.webp"/></div>
-    {words.map((w,i)=><i className="floating-word" key={w} style={{left:`${6+(i*17)%88}%`,top:`${7+(i*29)%82}%`,animationDelay:`${-i*.55}s`}}>{w}</i>)}
-    <section className="threshold-copy"><span>❦</span><h1>SOFT ARCANA</h1><p>Leave the useful world at the door for a minute.</p><Button onClick={begin}>enter slowly</Button><button className="ghost-link" onClick={onDone}>skip the threshold</button></section>
-    <MusicButton on={music} onToggle={toggle}/>
+const DRAW_COUNTS = [1, 2, 3, 5, 10]
+
+function memoryText(entry) {
+  if (!entry) return ''
+  if (entry.text) return entry.text
+  return [
+    entry.upright && 'Upright — ' + entry.upright,
+    entry.reversed && 'Reversed — ' + entry.reversed,
+    entry.associations && 'Associations — ' + entry.associations,
+    entry.context && 'Encounter — ' + entry.context,
+  ].filter(Boolean).join('\n\n')
+}
+
+function cardsForFilter(filter) {
+  if (filter === 'major') return TAROT_CARDS.filter((card) => card.suit === 'Major')
+  if (filter === 'minor') return TAROT_CARDS.filter((card) => card.suit !== 'Major')
+  if (['cups', 'swords', 'wands', 'pentacles'].includes(filter)) {
+    const suit = filter[0].toUpperCase() + filter.slice(1)
+    return TAROT_CARDS.filter((card) => card.suit === suit)
+  }
+  return TAROT_CARDS
+}
+
+function MusicButton({ on, onToggle }) {
+  return <button className="music-button" onClick={onToggle} aria-label="toggle atmosphere">
+    {on ? '♫' : '♩'} <span>{on ? 'sound on' : 'sound off'}</span>
+  </button>
+}
+
+function ReturnToBedroom({ onReturn, music, onMusic }) {
+  return <header className="room-header">
+    <button className="bedroom-return" onClick={onReturn}>← return to the bedroom</button>
+    <MusicButton on={music} onToggle={onMusic} />
+  </header>
+}
+
+function Threshold({ music, setMusic, onDone }) {
+  const [step, setStep] = useState(0)
+  const exercise = useMemo(() => rnd(RITUAL_EXERCISES), [])
+  const message = useMemo(() => rnd(FAIRY_MESSAGES), [])
+
+  const toggle = async () => {
+    const next = !music
+    setMusic(next)
+    next ? await startAmbient() : stopAmbient()
+  }
+
+  const enter = async () => {
+    if (music) await startAmbient()
+    setStep(1)
+  }
+
+  if (step === 0) return <div className="threshold mirror-threshold">
+    <div className="threshold-mirror threshold-mirror-a" />
+    <div className="threshold-mirror threshold-mirror-b" />
+    <section className="threshold-copy">
+      <span className="ornament">❦</span>
+      <h1>SOFT ARCANA</h1>
+      <p>Leave the bright world at the door.</p>
+      <button className="mirror-button primary" onClick={enter}>enter softly</button>
+      <button className="text-button" onClick={onDone}>skip the threshold</button>
+    </section>
+    <MusicButton on={music} onToggle={toggle} />
   </div>
-  if(step<3){const ex=exercises[step-1];return <div className="threshold exercise"><section><small>{step} / 2</small><div className="breathing-orb"/><h2>{ex.title}</h2><p>{ex.instruction}</p>{ex.words&&<div className="word-triptych">{ex.words.map(w=><span key={w}>{w}</span>)}</div>}<Button onClick={()=>setStep(step+1)}>continue</Button><button className="ghost-link" onClick={onDone}>skip the threshold</button></section><MusicButton on={music} onToggle={toggle}/></div>}
-  return <div className="threshold fairy-screen"><div className="fairy"><div className="wing left"/><div className="wing right"/><div className="fairy-head"/><div className="fairy-body"/></div><section className="fairy-message"><small>something came through</small><blockquote>{message}</blockquote><Button onClick={onDone}>take it with you</Button></section><MusicButton on={music} onToggle={toggle}/></div>
-}
 
-function Composer({history,onSave}){
-  const latest=history.at(-1)||{}
-  const [d,setD]=useState({upright:latest.upright||'',reversed:latest.reversed||'',associations:latest.associations||'',context:''})
-  return <div className="composer"><h3>your next layer</h3><small>saving creates a new version; earlier versions remain</small>
-    <label>Upright<textarea value={d.upright} onChange={e=>setD({...d,upright:e.target.value})}/></label>
-    <label>Reversed<textarea value={d.reversed} onChange={e=>setD({...d,reversed:e.target.value})}/></label>
-    <label>Images, memories, dreams<textarea value={d.associations} onChange={e=>setD({...d,associations:e.target.value})}/></label>
-    <label>This encounter<textarea value={d.context} onChange={e=>setD({...d,context:e.target.value})}/></label>
-    <Button onClick={()=>onSave(d)}>archive this iteration</Button>
+  if (step === 1) return <div className="threshold ritual-screen">
+    <section className="ritual-card">
+      <small>one small preparation</small>
+      <div className="breathing-mirror" />
+      <h2>{exercise.title}</h2>
+      <p>{exercise.instruction}</p>
+      {exercise.words && <div className="word-triptych">{exercise.words.map((word) => <span key={word}>{word}</span>)}</div>}
+      <button className="mirror-button primary" onClick={() => setStep(2)}>continue</button>
+      <button className="text-button" onClick={onDone}>skip the threshold</button>
+    </section>
+    <MusicButton on={music} onToggle={toggle} />
+  </div>
+
+  return <div className="threshold fairy-screen">
+    <div className="fairy-wrap" aria-hidden="true">
+      <div className="fairy">
+        <div className="wing wing-left" />
+        <div className="wing wing-right" />
+        <div className="fairy-head" />
+        <div className="fairy-body" />
+        <i className="fairy-spark s1" />
+        <i className="fairy-spark s2" />
+        <i className="fairy-spark s3" />
+        <i className="fairy-spark s4" />
+      </div>
+    </div>
+    <section className="fairy-message">
+      <small>something came through</small>
+      <blockquote>{message}</blockquote>
+      <button className="mirror-button primary" onClick={onDone}>say goodbye to the fairy</button>
+    </section>
+    <MusicButton on={music} onToggle={toggle} />
   </div>
 }
 
-function CardModal({card,history,onSave,onClose}){
-  const l=learningFor(card)
-  return <div className="modal" onMouseDown={onClose}><section className="codex" onMouseDown={e=>e.stopPropagation()}><button className="close" onClick={onClose}>×</button><div className="codex-top"><CardArt card={card}/><div><small>{card.arcana} · {card.element}</small><h2>{card.name}</h2><h4>upright</h4><b>{card.keywords}</b><p>{card.upright}</p><h4>reversed</h4><b>{card.reversedKeywords}</b><p>{card.reversed}</p></div></div><div className="teaching"><b>how to learn this card</b><p>{l.lesson}</p>{l.numberLesson&&<p>{l.numberLesson}</p>}<p>{l.anchor}</p></div><Composer history={history} onSave={onSave}/><h3>interpretation history</h3>{!history.length?<p className="empty">No personal layer yet.</p>:[...history].reverse().map((x,i)=><article className="history" key={x.id}><header><b>version {history.length-i}</b><time>{dateLabel(x.createdAt)}</time></header>{x.upright&&<p><span>upright</span>{x.upright}</p>}{x.reversed&&<p><span>reversed</span>{x.reversed}</p>}{x.associations&&<p><span>associations</span>{x.associations}</p>}{x.context&&<p><span>encounter</span>{x.context}</p>}</article>)}</section></div>
+function Bedroom({ onEnter, music, onMusic }) {
+  const entries = [
+    ['look', 'look in the mirror', 'receive a reading', 'large one'],
+    ['polish', 'polish the mirror', 'learn by seeing again', 'large two'],
+    ['open', 'open the mirror', 'cards & remembered dreams', 'small three'],
+    ['download', 'download the mirror', 'keep a copy outside the glass', 'small four'],
+  ]
+
+  return <main className="bedroom">
+    <MusicButton on={music} onToggle={onMusic} />
+    <div className="bedroom-reflection" />
+    <header>
+      <small>the bedroom</small>
+      <h1>SOFT ARCANA</h1>
+      <p>Four ways through the same glass.</p>
+    </header>
+    <section className="bedroom-menu">
+      {entries.map(([id, title, subtitle, size]) => <button
+        key={id}
+        className={'bedroom-entry ' + size}
+        onClick={() => onEnter(id)}
+      >
+        <span className="entry-glint" />
+        <b>{title}</b>
+        <small>{subtitle}</small>
+      </button>)}
+    </section>
+  </main>
 }
 
-function DrawView({interpretations,combos,setCombos,onCard,onArchive}){
-  const [spreadId,setSpreadId]=useState('past-present-future'),[question,setQuestion]=useState(''),[rev,setRev]=useState(true),[reading,setReading]=useState(null),[revealed,setRevealed]=useState(0),[note,setNote]=useState(''),[combo,setCombo]=useState('')
-  const spread=SPREADS.find(s=>s.id===spreadId)
-  const draw=()=>{const cards=shuffle(TAROT_CARDS).slice(0,spread.count).map((card,i)=>({card,position:spread.positions[i],reversed:rev&&Math.random()<.28}));const r={id:uid(),createdAt:new Date().toISOString(),question:question.trim(),spread,cards};setReading(r);setRevealed(0);setNote('');setCombo((combos[comboKey(cards)]||[]).at(-1)?.text||'');cards.forEach((_,i)=>setTimeout(()=>setRevealed(i+1),420*(i+1)))}
-  const saveCombo=()=>{if(!reading||![2,3].includes(reading.cards.length)||!combo.trim())return;const k=comboKey(reading.cards),next={...combos,[k]:[...(combos[k]||[]),{id:uid(),createdAt:new Date().toISOString(),text:combo.trim()}]};setCombos(next);storage.setCombinationHistory(next)}
-  return <main className="view"><header className="page-intro"><small>the reading room</small><h1>Ask less. Notice more.</h1><p>Traditional meanings are the floor; your own repeated encounters build the room.</p></header><section className="paper-panel controls"><label>Question<textarea value={question} onChange={e=>setQuestion(e.target.value)} placeholder="What is asking for attention?"/></label><div className="spread-row">{SPREADS.map(s=><button className={s.id===spreadId?'active':''} onClick={()=>setSpreadId(s.id)} key={s.id}>{s.name}</button>)}</div><div className="draw-row"><label><input type="checkbox" checked={rev} onChange={e=>setRev(e.target.checked)}/> allow reversals</label><Button onClick={draw}>draw the cards</Button></div></section>{!reading?<div className="waiting"><div className="deck-back">❦<span>SOFT ARCANA</span></div></div>:<><section className={`reading-grid count-${Math.min(reading.cards.length,5)}`}>{reading.cards.map((x,i)=><article key={i} className={`reading-card ${i<revealed?'revealed':''}`}><button onClick={()=>onCard(x.card)}><CardArt card={x.card} reversed={x.reversed} reveal={i<revealed}/></button><small>{x.position}</small><h3>{x.card.name}{x.reversed?' ↧':''}</h3><p>{x.reversed?x.card.reversed:x.card.upright}</p>{(interpretations[x.card.id]||[]).at(-1)&&<aside><b>latest personal layer</b>{(interpretations[x.card.id]||[]).at(-1)[x.reversed?'reversed':'upright']}</aside>}</article>)}</section>{[2,3].includes(reading.cards.length)&&<section className="paper-panel combo"><h3>this combination</h3><textarea value={combo} onChange={e=>setCombo(e.target.value)} placeholder="What do these cards mean together?"/><Button onClick={saveCombo}>archive combination layer</Button></section>}<section className="paper-panel combo"><h3>reading journal</h3><textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="What landed? What changed afterward?"/><Button onClick={()=>onArchive({...reading,note})}>keep this reading</Button></section></>}</main>
+function PolishMirror({ interpretations, onRemember, onReturn, music, onMusic }) {
+  const [filter, setFilter] = useState('all')
+  const [card, setCard] = useState(null)
+  const [draft, setDraft] = useState('')
+  const [drawer, setDrawer] = useState('traditional')
+  const [sealing, setSealing] = useState(false)
+  const queueRef = useRef([])
+
+  const resetQueue = (nextFilter = filter) => {
+    queueRef.current = shuffle(cardsForFilter(nextFilter))
+  }
+
+  useEffect(() => {
+    resetQueue(filter)
+    setCard(null)
+    setDraft('')
+    setDrawer('traditional')
+  }, [filter])
+
+  const draw = () => {
+    if (sealing) return
+    if (!queueRef.current.length) resetQueue()
+    let next = queueRef.current.shift()
+    if (card && next?.id === card.id && queueRef.current.length) {
+      queueRef.current.push(next)
+      next = queueRef.current.shift()
+    }
+    setCard(next)
+    setDraft('')
+    setDrawer('traditional')
+  }
+
+  const remember = () => {
+    if (!card || !draft.trim() || sealing) return
+    setSealing(true)
+    window.setTimeout(() => {
+      onRemember(card, draft.trim())
+      setCard(null)
+      setDraft('')
+      setSealing(false)
+    }, 1050)
+  }
+
+  const history = card ? (interpretations[card.id] || []) : []
+
+  return <div className="mirror-room polish-room">
+    <ReturnToBedroom onReturn={onReturn} music={music} onMusic={onMusic} />
+    <main className="room-content">
+      <header className="room-title">
+        <small>polish the mirror</small>
+        <h1>See it again.</h1>
+      </header>
+
+      <div className="study-filter" aria-label="choose cards to study">
+        {MEMORY_FILTERS.map(([id, label]) => <button
+          key={id}
+          className={filter === id ? 'active' : ''}
+          onClick={() => setFilter(id)}
+        >{label}</button>)}
+      </div>
+
+      <section className={'polish-stage ' + (sealing ? 'is-sealing' : '')}>
+        {!card ? <div className="deck-choice">
+          <button className="deck-touch" onClick={draw} aria-label="flip the top card">
+            <MirrorBack />
+            <span>touch the deck</span>
+          </button>
+          <button className="keep-polishing" onClick={draw}>keep polishing</button>
+        </div> : <div className="polish-encounter">
+          <div className="polish-card-wrap"><CardArt card={card} /></div>
+          <div className="memory-paper">
+            <small>{card.name}</small>
+            <h2>what do you see this time?</h2>
+            <textarea
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder="write what the card means to you now"
+            />
+            <button className="remember-button" disabled={!draft.trim()} onClick={remember}>remember</button>
+
+            <div className="dream-tabs">
+              <button className={drawer === 'traditional' ? 'active' : ''} onClick={() => setDrawer('traditional')}>traditional dream</button>
+              <button className={drawer === 'old' ? 'active' : ''} onClick={() => setDrawer('old')}>my old dreams</button>
+            </div>
+
+            <div className="dream-drawer">
+              {drawer === 'traditional' ? <article>
+                <b>{card.keywords}</b>
+                <p>{card.upright}</p>
+                <small>reversed / shadow</small>
+                <b>{card.reversedKeywords}</b>
+                <p>{card.reversed}</p>
+              </article> : <div className="old-dreams">
+                {!history.length && <p className="empty-dream">Nothing remembered yet.</p>}
+                {[...history].reverse().map((entry, index) => <article key={entry.id || index}>
+                  <header><b>dream {history.length - index}</b><time>{dateLabel(entry.createdAt)}</time></header>
+                  <p>{memoryText(entry)}</p>
+                </article>)}
+              </div>}
+            </div>
+          </div>
+
+          <button className="skip-polish" onClick={draw}>keep polishing</button>
+
+          {sealing && <div className="seal-bundle" aria-hidden="true">
+            <div className="folding-paper">
+              <i className="fold fold-left" />
+              <i className="fold fold-right" />
+              <i className="fold fold-top" />
+              <span className="wax-seal">◉</span>
+            </div>
+          </div>}
+        </div>}
+      </section>
+    </main>
+  </div>
 }
 
-function StudyView({interpretations,study,setStudy,onCard}){
-  const [card,setCard]=useState(()=>rnd(TAROT_CARDS)),[reversed,setReversed]=useState(()=>Math.random()<.35),[show,setShow]=useState(false)
-  const next=()=>{setCard(rnd(TAROT_CARDS));setReversed(Math.random()<.35);setShow(false)}
-  const rate=known=>{const s={...study,[card.id]:{known:(study[card.id]?.known||0)+(known?1:0),missed:(study[card.id]?.missed||0)+(known?0:1)}};setStudy(s);storage.setStudy(s);next()}
-  const l=learningFor(card),mine=(interpretations[card.id]||[]).at(-1)
-  return <main className="view"><header className="page-intro"><small>the study room</small><h1>Learn the cards by meeting them.</h1><p>Recall first. Reveal second. Add your own understanding whenever it becomes more precise.</p></header><section className="flash-stage"><div className="flash-card"><CardArt card={card} reversed={reversed}/></div><div className="flash-copy"><small>{reversed?'reversed':'upright'} · {(study[card.id]?.known||0)} known / {(study[card.id]?.missed||0)} again</small><h2>{card.name}</h2>{!show?<><p>Before revealing, say the meaning aloud or hold it in mind.</p><Button onClick={()=>setShow(true)}>reveal meaning</Button></>:<><b>{reversed?card.reversedKeywords:card.keywords}</b><p>{reversed?card.reversed:card.upright}</p><div className="teaching"><p>{l.lesson}</p>{l.numberLesson&&<p>{l.numberLesson}</p>}<p>{l.anchor}</p></div>{mine&&<aside><b>your latest language</b><p>{mine[reversed?'reversed':'upright']||mine.associations}</p></aside>}<div className="study-actions"><Button variant="pale" onClick={()=>rate(false)}>again</Button><Button onClick={()=>rate(true)}>I knew it</Button></div></>}<button className="ghost-link" onClick={()=>onCard(card)}>study / add interpretation</button></div></section></main>
+function LookMirror({ onRememberReading, onReturn, music, onMusic }) {
+  const [deck, setDeck] = useState(() => shuffle(TAROT_CARDS))
+  const [cards, setCards] = useState([])
+  const [phase, setPhase] = useState('ready')
+  const [cutDeck, setCutDeck] = useState(null)
+  const [note, setNote] = useState('')
+  const [savedKey, setSavedKey] = useState('')
+
+  const shuffleDeck = () => {
+    if (cards.length) return
+    setPhase('shuffling')
+    const mixed = shuffle(TAROT_CARDS)
+    window.setTimeout(() => {
+      const midpoint = Math.floor(mixed.length / 2)
+      setCutDeck([mixed.slice(0, midpoint), mixed.slice(midpoint)])
+      setPhase('cut')
+    }, 1000)
+  }
+
+  const chooseCut = (which) => {
+    const [left, right] = cutDeck
+    setDeck(which === 'left' ? [...left, ...right] : [...right, ...left])
+    setCutDeck(null)
+    setPhase('ready')
+  }
+
+  const draw = () => {
+    if (phase !== 'ready' || cards.length >= 10) return
+    let nextDeck = deck
+    if (!nextDeck.length) nextDeck = shuffle(TAROT_CARDS)
+    const next = nextDeck[0]
+    setDeck(nextDeck.slice(1))
+    setCards([...cards, { card: next, reversed: false }])
+    setNote('')
+    setSavedKey('')
+  }
+
+  const remember = () => {
+    if (!note.trim() || !DRAW_COUNTS.includes(cards.length)) return
+    const key = cards.map((item) => item.card.id).join('::') + '::' + cards.length
+    onRememberReading({
+      id: uid(),
+      createdAt: new Date().toISOString(),
+      cards,
+      note: note.trim(),
+      mirrorCount: cards.length,
+      type: 'mirror-reading',
+    })
+    setSavedKey(key)
+  }
+
+  return <div className="mirror-room look-room">
+    <ReturnToBedroom onReturn={onReturn} music={music} onMusic={onMusic} />
+    <main className="room-content">
+      <header className="room-title centered">
+        <small>look in the mirror</small>
+        <h1>speak your truth</h1>
+      </header>
+
+      {!cards.length && <section className="shuffle-zone">
+        {phase === 'ready' && <>
+          <button className="deck-touch draw-deck" onClick={draw}><MirrorBack /><span>touch the deck</span></button>
+          <button className="shuffle-button" onClick={shuffleDeck}>shuffle & cut</button>
+        </>}
+        {phase === 'shuffling' && <div className="shuffle-animation">
+          <MirrorBack className="shuffle-card a" />
+          <MirrorBack className="shuffle-card b" />
+          <MirrorBack className="shuffle-card c" />
+          <small>shuffling</small>
+        </div>}
+        {phase === 'cut' && <div className="cut-table">
+          <p>Which half goes on top?</p>
+          <div>
+            <button onClick={() => chooseCut('left')}><MirrorBack /><span>this half</span></button>
+            <button onClick={() => chooseCut('right')}><MirrorBack /><span>this half</span></button>
+          </div>
+        </div>}
+      </section>}
+
+      {!!cards.length && <>
+        <section className="draw-carousel">
+          {cards.map((item, index) => <article key={index} className="drawn-mirror-card">
+            <CardArt card={item.card} />
+            <small>{index + 1}</small>
+          </article>)}
+          {cards.length < 10 && <button className="draw-another" onClick={draw}>
+            <MirrorBack />
+            <span>draw another card</span>
+          </button>}
+        </section>
+
+        {DRAW_COUNTS.includes(cards.length) ? <section className="reading-memory">
+          <h2>what do you see?</h2>
+          <textarea value={note} onChange={(event) => setNote(event.target.value)} />
+          <button className="remember-button" disabled={!note.trim()} onClick={remember}>
+            {savedKey ? 'remembered' : 'remember'}
+          </button>
+        </section> : <p className="between-spreads">
+          Keep drawing. The mirror can be remembered at 1, 2, 3, 5, or 10 cards.
+        </p>}
+      </>}
+    </main>
+  </div>
 }
 
-function CardsView({interpretations,onCard}){
-  const [q,setQ]=useState(''),[filter,setFilter]=useState('All');const filters=['All','Major','Wands','Cups','Swords','Pentacles','Personalized'];const cards=TAROT_CARDS.filter(c=>`${c.name} ${c.keywords} ${c.reversedKeywords}`.toLowerCase().includes(q.toLowerCase())&&(filter==='All'||c.suit===filter||(filter==='Personalized'&&(interpretations[c.id]||[]).length)))
-  return <main className="view"><header className="page-intro"><small>the card cabinet · 78</small><h1>Every card is a room.</h1><p>Browse the traditional reference and watch your personal understanding change version by version.</p></header><div className="library-tools"><input value={q} onChange={e=>setQ(e.target.value)} placeholder="search names or meanings"/><div>{filters.map(f=><button className={f===filter?'active':''} onClick={()=>setFilter(f)} key={f}>{f}</button>)}</div></div><section className="card-grid">{cards.map(c=><button className="library-tile" onClick={()=>onCard(c)} key={c.id}><CardArt card={c} small/><div><small>{c.suit}</small><b>{c.name}</b><span>{c.keywords}</span><em>{(interpretations[c.id]||[]).length?`${(interpretations[c.id]||[]).length} personal layers`:'unwritten'}</em></div></button>)}</section></main>
+function CardDreamSheet({ card, history, onClose }) {
+  const [drawer, setDrawer] = useState('old')
+  return <div className="modal" onMouseDown={onClose}>
+    <section className="dream-sheet" onMouseDown={(event) => event.stopPropagation()}>
+      <button className="close" onClick={onClose}>×</button>
+      <div className="sheet-top">
+        <CardArt card={card} />
+        <div>
+          <small>{card.suit}</small>
+          <h2>{card.name}</h2>
+          <div className="dream-tabs">
+            <button className={drawer === 'traditional' ? 'active' : ''} onClick={() => setDrawer('traditional')}>traditional dream</button>
+            <button className={drawer === 'old' ? 'active' : ''} onClick={() => setDrawer('old')}>my old dreams</button>
+          </div>
+        </div>
+      </div>
+      <div className="dream-drawer sheet-drawer">
+        {drawer === 'traditional' ? <article><b>{card.keywords}</b><p>{card.upright}</p><small>reversed / shadow</small><b>{card.reversedKeywords}</b><p>{card.reversed}</p></article> : <div className="old-dreams">
+          {[...history].reverse().map((entry, index) => <article key={entry.id || index}><header><b>dream {history.length - index}</b><time>{dateLabel(entry.createdAt)}</time></header><p>{memoryText(entry)}</p></article>)}
+        </div>}
+      </div>
+    </section>
+  </div>
 }
 
-const download=(text,name,type)=>{const b=new Blob([text],{type}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u)}
-function MemoryView({interpretations,combos,readings,study,onDelete,onImport}){
-  const input=useRef(null)
-  const exportObj=()=>({version:4,app:'Soft Arcana',exportedAt:new Date().toISOString(),sourceNote:SOURCE_NOTE,cards:TAROT_CARDS.map(c=>({id:c.id,name:c.name,arcana:c.arcana,suit:c.suit,traditional:{uprightKeywords:c.keywords,uprightMeaning:c.upright,reversedKeywords:c.reversedKeywords,reversedMeaning:c.reversed,learning:learningFor(c)},personalInterpretationHistory:interpretations[c.id]||[],study:study[c.id]||{known:0,missed:0}})),combinationHistory:combos,readings,study})
-  const exportJson=()=>download(JSON.stringify(exportObj(),null,2),`soft-arcana-complete-${new Date().toISOString().slice(0,10)}.json`,'application/json')
-  const exportMd=()=>{const d=exportObj(),l=['# Soft Arcana — Complete Card Notebook','',d.sourceNote,''];d.cards.forEach(c=>{l.push(`## ${c.name}`,'',`**Upright:** ${c.traditional.uprightKeywords}`,'',c.traditional.uprightMeaning,'',`**Reversed:** ${c.traditional.reversedKeywords}`,'',c.traditional.reversedMeaning,'','### Personal interpretation history','');if(!c.personalInterpretationHistory.length)l.push('_No personal interpretations yet._','');c.personalInterpretationHistory.forEach((x,i)=>l.push(`#### Version ${i+1} — ${x.createdAt}`,'',x.upright?`- Upright: ${x.upright}`:'',x.reversed?`- Reversed: ${x.reversed}`:'',x.associations?`- Associations: ${x.associations}`:'',x.context?`- Context: ${x.context}`:'',''))});download(l.join('\n'),`soft-arcana-notebook-${new Date().toISOString().slice(0,10)}.md`,'text/markdown')}
-  const importFile=async f=>{if(!f)return;const p=JSON.parse(await f.text());if(p.cards){const rebuilt={};p.cards.forEach(c=>rebuilt[c.id]=c.personalInterpretationHistory||[]);storage.setInterpretations(rebuilt);storage.setCombinationHistory(p.combinationHistory||{});storage.setReadings(p.readings||[]);storage.setStudy(p.study||{})}else storage.importAll(p);onImport()}
-  return <main className="view"><header className="page-intro"><small>the archive</small><h1>Nothing has to disappear.</h1><p>Every personal interpretation is append-only. Export the whole evolving notebook whenever you want a permanent copy.</p></header><section className="paper-panel export-panel"><h3>All 78 cards + traditional meanings + every personal iteration.</h3><div><Button onClick={exportJson}>export JSON</Button><Button variant="pale" onClick={exportMd}>export readable notebook</Button><Button variant="pale" onClick={()=>input.current.click()}>restore backup</Button><input ref={input} hidden type="file" accept="application/json" onChange={e=>importFile(e.target.files?.[0])}/></div></section><section className="retention"><b>about memory</b><p>This version saves locally on this browser and device. Closing the app or returning weeks later should keep it. Clearing site data, private browsing, or changing devices can erase local storage; exports are the permanent copy.</p></section><h3>saved readings · {readings.length}</h3>{readings.map(r=><article className="archive-reading" key={r.id}><header><b>{r.spread.name}</b><time>{dateLabel(r.createdAt)}</time></header>{r.question&&<blockquote>{r.question}</blockquote>}<div className="archive-strip">{r.cards.map((x,i)=><div key={i}><CardArt card={x.card} reversed={x.reversed} small/><small>{x.position}</small></div>)}</div>{r.note&&<p>{r.note}</p>}<button onClick={()=>onDelete(r.id)}>remove reading</button></article>)}</main>
+function OpenMirror({ interpretations, readings, onReturn, music, onMusic }) {
+  const [rememberedOnly, setRememberedOnly] = useState(false)
+  const [mode, setMode] = useState('cards')
+  const [selected, setSelected] = useState(null)
+
+  const cards = rememberedOnly ? TAROT_CARDS.filter((card) => (interpretations[card.id] || []).length) : TAROT_CARDS
+  const mirrorReadings = readings.filter((reading) => reading.note && DRAW_COUNTS.includes(reading.cards?.length || reading.mirrorCount))
+
+  return <div className="mirror-room open-room">
+    <ReturnToBedroom onReturn={onReturn} music={music} onMusic={onMusic} />
+    <main className="room-content">
+      <header className="room-title">
+        <small>open the mirror</small>
+        <h1>What the glass kept.</h1>
+      </header>
+
+      <div className="open-switches">
+        <button className={mode === 'cards' ? 'active' : ''} onClick={() => setMode('cards')}>cards</button>
+        <button className={mode === 'combinations' ? 'active' : ''} onClick={() => setMode('combinations')}>combinations</button>
+      </div>
+
+      {mode === 'cards' ? <>
+        <label className="remembered-toggle">
+          <input type="checkbox" checked={rememberedOnly} onChange={(event) => setRememberedOnly(event.target.checked)} />
+          <span />
+          remembered only
+        </label>
+
+        <section className="card-carousel">
+          {cards.map((card) => {
+            const history = interpretations[card.id] || []
+            const remembered = history.length > 0
+            return <button
+              key={card.id}
+              className={'archive-card-tile ' + (remembered ? 'is-remembered' : 'is-unremembered')}
+              onClick={() => remembered && setSelected(card)}
+            >
+              {remembered ? <CardArt card={card} /> : <MirrorBack />}
+              <b>{remembered ? card.name : 'unremembered'}</b>
+              <small>{remembered ? history.length + ' dream' + (history.length === 1 ? '' : 's') : 'still behind the glass'}</small>
+            </button>
+          })}
+        </section>
+      </> : <section className="combination-archive">
+        {DRAW_COUNTS.map((count) => {
+          const group = mirrorReadings.filter((reading) => (reading.cards?.length || reading.mirrorCount) === count)
+          return <section className="combination-group" key={count}>
+            <header><h2>{count === 1 ? 'single draws' : count + ' cards'}</h2><small>{group.length} remembered</small></header>
+            {!group.length ? <p className="empty-combination">Nothing has been kept here yet.</p> : <div className="combination-carousel">
+              {group.map((reading) => <article key={reading.id}>
+                <div className="mini-card-run">
+                  {reading.cards.map((item, index) => <div key={index}><CardArt card={item.card} small /></div>)}
+                </div>
+                <time>{dateLabel(reading.createdAt)}</time>
+                <p>{reading.note}</p>
+              </article>)}
+            </div>}
+          </section>
+        })}
+      </section>}
+
+      {selected && <CardDreamSheet card={selected} history={interpretations[selected.id] || []} onClose={() => setSelected(null)} />}
+    </main>
+  </div>
 }
 
-export default function App(){
-  const [tab,setTab]=useState('draw'),[selected,setSelected]=useState(null),[interpretations,setInterpretations]=useState(()=>storage.getInterpretations()),[combos,setCombos]=useState(()=>storage.getCombinationHistory()),[readings,setReadings]=useState(()=>storage.getReadings()),[study,setStudy]=useState(()=>storage.getStudy()),[prefs,setPrefs]=useState(()=>storage.getPreferences()),[ritual,setRitual]=useState(true),[toast,setToast]=useState('')
-  const flash=t=>{setToast(t);setTimeout(()=>setToast(''),1800)}
-  const setMusic=music=>{const p={...prefs,music};setPrefs(p);storage.setPreferences(p)}
-  const saveIteration=d=>{const e={id:uid(),createdAt:new Date().toISOString(),...d},n={...interpretations,[selected.id]:[...(interpretations[selected.id]||[]),e]};setInterpretations(n);storage.setInterpretations(n);flash('A NEW LAYER WAS ARCHIVED')}
-  const archive=r=>{const n=[r,...readings];setReadings(n);storage.setReadings(n);flash('READING KEPT')}
-  const reload=()=>{setInterpretations(storage.getInterpretations());setCombos(storage.getCombinationHistory());setReadings(storage.getReadings());setStudy(storage.getStudy());flash('THE NOTEBOOK RETURNED')}
-  const toggleMusic=async()=>{const n=!prefs.music;setMusic(n);n?await startAmbient():stopAmbient()}
-  return <div className="app-shell"><header className="app-header"><button className="brand" onClick={()=>setRitual(true)}>❦ <span><b>SOFT ARCANA</b><small>a private card notebook</small></span></button><MusicButton on={prefs.music} onToggle={toggleMusic}/></header>{tab==='draw'&&<DrawView interpretations={interpretations} combos={combos} setCombos={setCombos} onCard={setSelected} onArchive={archive}/>} {tab==='study'&&<StudyView interpretations={interpretations} study={study} setStudy={setStudy} onCard={setSelected}/>} {tab==='cards'&&<CardsView interpretations={interpretations} onCard={setSelected}/>} {tab==='memory'&&<MemoryView interpretations={interpretations} combos={combos} readings={readings} study={study} onDelete={id=>{const n=readings.filter(r=>r.id!==id);setReadings(n);storage.setReadings(n)}} onImport={reload}/>}<nav className="bottom-nav"><button className={tab==='draw'?'active':''} onClick={()=>setTab('draw')}>☽<b>draw</b></button><button className={tab==='study'?'active':''} onClick={()=>setTab('study')}>✽<b>learn</b></button><button className={tab==='cards'?'active':''} onClick={()=>setTab('cards')}>❧<b>cards</b></button><button className={tab==='memory'?'active':''} onClick={()=>setTab('memory')}>⌂<b>memory</b></button></nav>{selected&&<CardModal card={selected} history={interpretations[selected.id]||[]} onSave={saveIteration} onClose={()=>setSelected(null)}/>} {ritual&&<Threshold music={prefs.music} setMusic={setMusic} onDone={()=>setRitual(false)}/>} {toast&&<div className="toast">{toast}</div>}</div>
+const download = (text, name, type) => {
+  const blob = new Blob([text], { type })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = name
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
+
+function DownloadMirror({ interpretations, combos, readings, study, onImport, onReturn, music, onMusic }) {
+  const input = useRef(null)
+  const remembered = Object.values(interpretations).filter((items) => items?.length).length
+
+  const exportObject = () => ({
+    version: 5,
+    app: 'Soft Arcana',
+    exportedAt: new Date().toISOString(),
+    sourceNote: SOURCE_NOTE,
+    cards: TAROT_CARDS.map((card) => ({
+      id: card.id,
+      name: card.name,
+      suit: card.suit,
+      traditional: {
+        uprightKeywords: card.keywords,
+        uprightMeaning: card.upright,
+        reversedKeywords: card.reversedKeywords,
+        reversedMeaning: card.reversed,
+      },
+      memories: interpretations[card.id] || [],
+    })),
+    interpretations,
+    combinationHistory: combos,
+    readings,
+    study,
+  })
+
+  const exportJson = () => download(
+    JSON.stringify(exportObject(), null, 2),
+    'soft-arcana-v0.5-' + new Date().toISOString().slice(0, 10) + '.json',
+    'application/json'
+  )
+
+  const exportNotebook = () => {
+    const lines = ['# Soft Arcana — Mirror Notebook', '', SOURCE_NOTE, '']
+    TAROT_CARDS.forEach((card) => {
+      lines.push('## ' + card.name, '', '**Traditional dream:** ' + card.keywords, '', card.upright, '', '### My old dreams', '')
+      const history = interpretations[card.id] || []
+      if (!history.length) lines.push('_Not yet remembered._', '')
+      history.forEach((entry, index) => lines.push('#### Dream ' + (index + 1) + ' — ' + entry.createdAt, '', memoryText(entry), ''))
+    })
+    lines.push('# Remembered combinations', '')
+    readings.filter((reading) => reading.note).forEach((reading) => {
+      lines.push('## ' + reading.cards.length + ' cards — ' + reading.createdAt, '', reading.cards.map((item) => item.card.name).join(' · '), '', reading.note, '')
+    })
+    download(lines.join('\n'), 'soft-arcana-mirror-notebook.md', 'text/markdown')
+  }
+
+  const importFile = async (file) => {
+    if (!file) return
+    const payload = JSON.parse(await file.text())
+    if (payload.cards && !payload.interpretations) {
+      const rebuilt = {}
+      payload.cards.forEach((card) => { rebuilt[card.id] = card.memories || card.personalInterpretationHistory || [] })
+      storage.setInterpretations(rebuilt)
+      storage.setCombinationHistory(payload.combinationHistory || {})
+      storage.setReadings(payload.readings || [])
+      storage.setStudy(payload.study || {})
+    } else {
+      storage.importAll(payload)
+    }
+    onImport()
+  }
+
+  return <div className="mirror-room download-room">
+    <ReturnToBedroom onReturn={onReturn} music={music} onMusic={onMusic} />
+    <main className="room-content download-content">
+      <header className="room-title">
+        <small>download the mirror</small>
+        <h1>Carry the reflection out.</h1>
+      </header>
+      <section className="download-panel">
+        <div className="download-mirror"><span>{remembered}</span><small>of 78 cards remembered</small></div>
+        <p>Your mirror lives in this browser. A download is the copy that cannot disappear when browser storage is cleared.</p>
+        <button className="mirror-button primary" onClick={exportJson}>download everything</button>
+        <button className="mirror-button secondary" onClick={exportNotebook}>download readable notebook</button>
+        <button className="text-button" onClick={() => input.current?.click()}>restore an old mirror</button>
+        <input ref={input} hidden type="file" accept="application/json" onChange={(event) => importFile(event.target.files?.[0])} />
+      </section>
+    </main>
+  </div>
+}
+
+export default function App() {
+  const [screen, setScreen] = useState('bedroom')
+  const [ritual, setRitual] = useState(true)
+  const [interpretations, setInterpretations] = useState(() => storage.getInterpretations())
+  const [combos, setCombos] = useState(() => storage.getCombinationHistory())
+  const [readings, setReadings] = useState(() => storage.getReadings())
+  const [study, setStudy] = useState(() => storage.getStudy())
+  const [prefs, setPrefs] = useState(() => storage.getPreferences())
+  const [toast, setToast] = useState('')
+
+  const flash = (text) => {
+    setToast(text)
+    window.setTimeout(() => setToast(''), 1800)
+  }
+
+  const setMusic = (music) => {
+    const next = { ...prefs, music }
+    setPrefs(next)
+    storage.setPreferences(next)
+  }
+
+  const toggleMusic = async () => {
+    const next = !prefs.music
+    setMusic(next)
+    next ? await startAmbient() : stopAmbient()
+  }
+
+  const rememberCard = (card, text) => {
+    const memory = { id: uid(), createdAt: new Date().toISOString(), text }
+    const next = {
+      ...interpretations,
+      [card.id]: [...(interpretations[card.id] || []), memory],
+    }
+    setInterpretations(next)
+    storage.setInterpretations(next)
+    flash('SEALED IN THE MIRROR')
+  }
+
+  const rememberReading = (reading) => {
+    const next = [reading, ...readings]
+    setReadings(next)
+    storage.setReadings(next)
+    flash('THE MIRROR KEPT IT')
+  }
+
+  const reload = () => {
+    setInterpretations(storage.getInterpretations())
+    setCombos(storage.getCombinationHistory())
+    setReadings(storage.getReadings())
+    setStudy(storage.getStudy())
+    flash('THE OLD MIRROR OPENED')
+  }
+
+  const returnToBedroom = () => setScreen('bedroom')
+
+  return <div className="app-shell">
+    {screen === 'bedroom' && <Bedroom onEnter={setScreen} music={prefs.music} onMusic={toggleMusic} />}
+    {screen === 'look' && <LookMirror onRememberReading={rememberReading} onReturn={returnToBedroom} music={prefs.music} onMusic={toggleMusic} />}
+    {screen === 'polish' && <PolishMirror interpretations={interpretations} onRemember={rememberCard} onReturn={returnToBedroom} music={prefs.music} onMusic={toggleMusic} />}
+    {screen === 'open' && <OpenMirror interpretations={interpretations} readings={readings} onReturn={returnToBedroom} music={prefs.music} onMusic={toggleMusic} />}
+    {screen === 'download' && <DownloadMirror interpretations={interpretations} combos={combos} readings={readings} study={study} onImport={reload} onReturn={returnToBedroom} music={prefs.music} onMusic={toggleMusic} />}
+    {ritual && <Threshold music={prefs.music} setMusic={setMusic} onDone={() => setRitual(false)} />}
+    {toast && <div className="toast">{toast}</div>}
+  </div>
 }
