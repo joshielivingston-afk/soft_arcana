@@ -180,14 +180,15 @@ function MajorScene({ card, palette, rand }) {
   </>
 }
 
-export default function CardArt({ card, reversed = false, small = false, reveal = true, className = '' }) {
+export default function CardArt({ card, reversed = false, small = false, reveal = true, className = '', wear = 0 }) {
   const palette = PALETTES[card.suit] || PALETTES.Major
   const rand = seeded(card.id)
   const label = String(card.number).padStart(2, '0')
   const heroIndex = HERO_ART[card.id]
   const hasHero = heroIndex !== undefined
+  const wearLevel = wear >= 10 ? 4 : wear >= 6 ? 3 : wear >= 3 ? 2 : wear >= 1 ? 1 : 0
 
-  return <div className={`morute-card ${hasHero ? 'has-hero-art' : 'has-fallback-art'} ${reversed ? 'is-reversed' : ''} ${small ? 'is-small' : ''} ${reveal ? 'is-revealed' : ''} ${className}`}>
+  return <div className={`morute-card ${hasHero ? 'has-hero-art' : 'has-fallback-art'} wear-${wearLevel} ${reversed ? 'is-reversed' : ''} ${small ? 'is-small' : ''} ${reveal ? 'is-revealed' : ''} ${className}`}>
     <div className="morute-card-inner">
       <div className="morute-card-back"><MirrorBackDesign /></div>
       <div className="morute-card-front">
@@ -216,6 +217,13 @@ export default function CardArt({ card, reversed = false, small = false, reveal 
           </svg>
           <div className="card-grain"/>
         </>}
+        {wearLevel > 0 && <div className="wear-overlay" aria-hidden="true">
+          <i className="wear-scuff one" />
+          <i className="wear-scuff two" />
+          <i className="wear-crease" />
+          {wearLevel >= 3 && <i className="wear-fleck" />}
+          {wearLevel >= 4 && <i className="wear-flower">✤</i>}
+        </div>}
       </div>
     </div>
   </div>
