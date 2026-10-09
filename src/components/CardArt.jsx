@@ -68,6 +68,43 @@ function Moth({ x, y, s = 1, pale = '#eadfd8', dark = '#574752' }) {
   </g>
 }
 
+
+function MirrorBackDesign() {
+  return <div className="mirror-back-design" aria-hidden="true">
+    <svg viewBox="0 0 180 270">
+      <defs>
+        <linearGradient id="silver" x1="0" x2="1">
+          <stop offset="0" stopColor="#6f7478"/>
+          <stop offset=".28" stopColor="#e4e1db"/>
+          <stop offset=".52" stopColor="#8e9397"/>
+          <stop offset=".76" stopColor="#f0ece6"/>
+          <stop offset="1" stopColor="#686c70"/>
+        </linearGradient>
+        <radialGradient id="glass">
+          <stop offset="0" stopColor="#b9b6bd" stopOpacity=".42"/>
+          <stop offset=".6" stopColor="#55505c" stopOpacity=".45"/>
+          <stop offset="1" stopColor="#17131a" stopOpacity=".82"/>
+        </radialGradient>
+      </defs>
+      <rect x="9" y="9" width="162" height="252" rx="8" fill="none" stroke="url(#silver)" strokeWidth="2"/>
+      <rect x="14" y="14" width="152" height="242" rx="6" fill="none" stroke="#8e9498" strokeOpacity=".55"/>
+      <path d="M18 48 Q18 18 48 18 M18 40 Q34 40 40 18 M162 48 Q162 18 132 18 M162 40 Q146 40 140 18" fill="none" stroke="url(#silver)" strokeWidth="2"/>
+      <path d="M18 222 Q18 252 48 252 M18 230 Q34 230 40 252 M162 222 Q162 252 132 252 M162 230 Q146 230 140 252" fill="none" stroke="url(#silver)" strokeWidth="2"/>
+      <path d="M35 82 C25 62 30 44 49 39 M145 82 C155 62 150 44 131 39 M35 188 C25 208 30 226 49 231 M145 188 C155 208 150 226 131 231" fill="none" stroke="#aeb2b4" strokeOpacity=".5" strokeWidth="1.3"/>
+      <ellipse cx="90" cy="108" rx="48" ry="64" fill="url(#glass)" stroke="url(#silver)" strokeWidth="4"/>
+      <ellipse cx="90" cy="108" rx="40" ry="56" fill="none" stroke="#d8d6d2" strokeOpacity=".55"/>
+      <path d="M84 169 C83 182 77 198 70 211 C78 220 102 220 110 211 C103 198 97 182 96 169Z" fill="#29232b" stroke="url(#silver)" strokeWidth="3"/>
+      <path d="M70 211 Q90 228 110 211" fill="none" stroke="#e7e2dc" strokeOpacity=".65" strokeWidth="1.4"/>
+      <path d="M54 110 Q90 78 126 110" fill="none" stroke="#e9e5df" strokeOpacity=".12" strokeWidth="7"/>
+      <path d="M41 67 C56 43 70 31 90 29 C110 31 124 43 139 67" fill="none" stroke="#bfc3c5" strokeOpacity=".45" strokeWidth="1"/>
+    </svg>
+  </div>
+}
+
+export function MirrorBack({ className = '' }) {
+  return <div className={'standalone-mirror-back ' + className}><MirrorBackDesign /></div>
+}
+
 function Arch({ palette }) {
   return <path d="M38 205V78C38 34 62 13 90 13s52 21 52 65v127" fill="none" stroke={palette[3]} strokeOpacity=".52" strokeWidth="2" />
 }
@@ -152,11 +189,7 @@ export default function CardArt({ card, reversed = false, small = false, reveal 
 
   return <div className={`morute-card ${hasHero ? 'has-hero-art' : 'has-fallback-art'} ${reversed ? 'is-reversed' : ''} ${small ? 'is-small' : ''} ${reveal ? 'is-revealed' : ''} ${className}`}>
     <div className="morute-card-inner">
-      <div className="morute-card-back">
-        <div className="back-lace"/>
-        <div className="back-oval"><Moth x={90} y={110} s={2.15} pale="#efe5de" dark="#4a3947"/></div>
-        <span>SOFT ARCANA</span>
-      </div>
+      <div className="morute-card-back"><MirrorBackDesign /></div>
       <div className="morute-card-front">
         {hasHero ? <>
           <div className="hero-card-image" role="img" aria-label={`${card.name} illustrated tarot card`} style={{ '--hero-index': heroIndex, backgroundImage: "url('./cards/hero-sprite.webp')" }}/>
