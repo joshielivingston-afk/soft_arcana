@@ -232,11 +232,7 @@ textarea{resize:vertical}
 .morute-card-front svg,.hero-card-image{width:100%;height:100%;display:block}
 .hero-card-image{background-repeat:no-repeat;background-size:100% 200%;background-position:center top}
 .hero-card-sprite.bottom{background-position:center bottom}
-.hero-card-glaze{
-  position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(110deg,rgba(255,255,255,.11),transparent 20% 74%,rgba(25,16,23,.12));
-  mix-blend-mode:soft-light
-}
+.hero-card-glaze{display:none}
 .morute-card.is-reversed .morute-card-front svg,
 .morute-card.is-reversed .hero-card-image{transform:rotate(180deg)}
 
