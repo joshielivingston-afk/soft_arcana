@@ -4,6 +4,8 @@ const KEYS = {
   readings: 'soft-arcana.readings.v3',
   study: 'soft-arcana.study.v3',
   preferences: 'soft-arcana.preferences.v3',
+  beneath: 'soft-arcana.beneath.v5',
+  wear: 'soft-arcana.wear.v5',
   legacyNotes: 'soft-arcana.card-notes.v1',
   legacyCombos: 'soft-arcana.combo-notes.v1',
   legacyReadings: 'soft-arcana.readings.v1',
@@ -63,6 +65,10 @@ export const storage = {
   setStudy: (value) => write(KEYS.study, value),
   getPreferences: () => read(KEYS.preferences, { music: true }),
   setPreferences: (value) => write(KEYS.preferences, value),
+  getBeneath: () => read(KEYS.beneath, {}),
+  setBeneath: (value) => write(KEYS.beneath, value),
+  getWear: () => read(KEYS.wear, {}),
+  setWear: (value) => write(KEYS.wear, value),
   exportAll: () => ({
     version: 4,
     app: 'Soft Arcana',
@@ -72,6 +78,8 @@ export const storage = {
     readings: read(KEYS.readings, []),
     study: read(KEYS.study, {}),
     preferences: read(KEYS.preferences, { music: true }),
+    beneath: read(KEYS.beneath, {}),
+    wear: read(KEYS.wear, {}),
   }),
   importAll: (payload) => {
     if (!payload || typeof payload !== 'object') throw new Error('Invalid Soft Arcana backup')
@@ -80,5 +88,7 @@ export const storage = {
     if (payload.readings) write(KEYS.readings, payload.readings)
     if (payload.study) write(KEYS.study, payload.study)
     if (payload.preferences) write(KEYS.preferences, payload.preferences)
+    if (payload.beneath) write(KEYS.beneath, payload.beneath)
+    if (payload.wear) write(KEYS.wear, payload.wear)
   },
 }
