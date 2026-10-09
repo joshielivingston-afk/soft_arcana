@@ -9,16 +9,16 @@ const PALETTES = {
 }
 
 const HERO_ART = {
-  'major-00': './cards/major-00.webp?v=5',
-  'major-01': './cards/major-01.webp?v=5',
-  'major-02': './cards/major-02.webp?v=5',
-  'major-03': './cards/major-03.webp?v=5',
-  'major-13': './cards/major-13.webp?v=5',
-  'major-18': './cards/major-18.webp?v=5',
-  'cups-01': './cards/cups-01.webp?v=5',
-  'swords-03': './cards/swords-03.webp?v=5',
-  'wands-06': './cards/wands-06.webp?v=5',
-  'pentacles-13': './cards/pentacles-13.webp?v=5',
+  'major-00': { src: './cards/hero-pair-0.avif', position: 'top' },
+  'major-01': { src: './cards/hero-pair-0.avif', position: 'bottom' },
+  'major-02': { src: './cards/hero-pair-1.avif', position: 'top' },
+  'major-03': { src: './cards/hero-pair-1.avif', position: 'bottom' },
+  'major-13': { src: './cards/hero-pair-2.avif', position: 'top' },
+  'major-18': { src: './cards/hero-pair-2.avif', position: 'bottom' },
+  'cups-01': { src: './cards/hero-pair-3.avif', position: 'top' },
+  'swords-03': { src: './cards/hero-pair-3.avif', position: 'bottom' },
+  'wands-06': { src: './cards/hero-pair-4.avif', position: 'top' },
+  'pentacles-13': { src: './cards/hero-pair-4.avif', position: 'bottom' },
 }
 const MAJOR_SCENES = [
   ['cliff', 'white moth', 'tiny suitcase'],
@@ -193,7 +193,7 @@ export default function CardArt({ card, reversed = false, small = false, reveal 
       <div className="morute-card-back"><MirrorBackDesign /></div>
       <div className="morute-card-front">
         {hasHero ? <>
-          <img className="hero-card-image" src={heroArt} alt={`${card.name} illustrated tarot card`} />
+          <div className={`hero-card-image hero-card-sprite ${heroArt.position}`} role="img" aria-label={`${card.name} illustrated tarot card`} style={{ backgroundImage: `url("${heroArt.src}")` }} />
           <div className="hero-card-glaze"/>
         </> : <>
           <svg viewBox="0 0 180 260" role="img" aria-label={`${card.name} tarot card illustration`}>
