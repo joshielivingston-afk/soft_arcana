@@ -1,4 +1,4 @@
-const CACHE = 'soft-arcana-v5-5-sharp-art'
+const CACHE = 'soft-arcana-v5-6-no-polish-fog'
 const CORE = ["./","./index.html","./manifest.webmanifest","./icon.svg","./cards/hero-pair-0.avif","./cards/hero-pair-1.avif","./cards/hero-pair-2.avif","./cards/hero-pair-3.avif","./cards/hero-pair-4.avif"]
 
 self.addEventListener('install', (event) => {
