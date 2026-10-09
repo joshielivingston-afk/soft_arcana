@@ -1,4 +1,4 @@
-const CACHE = 'soft-arcana-v5-2'
+const CACHE = 'soft-arcana-v5-3-real-art'
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./cards/hero-sprite.webp"]
 
 self.addEventListener('install', (event) => {
