@@ -230,8 +230,13 @@ textarea{resize:vertical}
 }
 .morute-card-front{transform:rotateY(180deg);background:#cab9bd}
 .morute-card-front svg,.hero-card-image{width:100%;height:100%;display:block}
-.hero-card-image{background-repeat:no-repeat;background-size:100% 200%;background-position:center top}
-.hero-card-sprite.bottom{background-position:center bottom}
+.hero-card-image{overflow:hidden;background:#171117}
+.hero-card-crop img{display:block;width:100%;height:200%;max-width:none;image-rendering:auto;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.hero-card-crop img.bottom{transform:translateY(-50%)}
+.hero-card-crop img.top{transform:translateY(0)}
+.morute-card.is-reversed .hero-card-crop{transform:rotate(180deg)}
+.morute-card.is-reversed .hero-card-crop img.bottom{transform:translateY(-50%)}
+.morute-card.is-reversed .hero-card-crop img.top{transform:translateY(0)}
 .hero-card-glaze{display:none}
 .morute-card.is-reversed .morute-card-front svg,
 .morute-card.is-reversed .hero-card-image{transform:rotate(180deg)}
