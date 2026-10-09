@@ -1,4 +1,4 @@
-const CACHE = 'soft-arcana-v5-3-real-art'
+const CACHE = 'soft-arcana-v5-4-valid-art'
 const CORE = ["./","./index.html","./manifest.webmanifest","./icon.svg","./cards/major-00.webp","./cards/major-01.webp","./cards/major-02.webp","./cards/major-03.webp","./cards/major-13.webp","./cards/major-18.webp","./cards/cups-01.webp","./cards/swords-03.webp","./cards/wands-06.webp","./cards/pentacles-13.webp"]
 
 self.addEventListener('install', (event) => {
