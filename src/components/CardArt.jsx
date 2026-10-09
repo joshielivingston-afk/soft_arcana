@@ -9,16 +9,16 @@ const PALETTES = {
 }
 
 const HERO_ART = {
-  'major-00': { src: './cards/hero-pair-0.avif', position: 'top' },
-  'major-01': { src: './cards/hero-pair-0.avif', position: 'bottom' },
-  'major-02': { src: './cards/hero-pair-1.avif', position: 'top' },
-  'major-03': { src: './cards/hero-pair-1.avif', position: 'bottom' },
-  'major-13': { src: './cards/hero-pair-2.avif', position: 'top' },
-  'major-18': { src: './cards/hero-pair-2.avif', position: 'bottom' },
-  'cups-01': { src: './cards/hero-pair-3.avif', position: 'top' },
-  'swords-03': { src: './cards/hero-pair-3.avif', position: 'bottom' },
-  'wands-06': { src: './cards/hero-pair-4.avif', position: 'top' },
-  'pentacles-13': { src: './cards/hero-pair-4.avif', position: 'bottom' },
+  'major-00': { src: './cards/hero-pair-0-hires.avif', position: 'top' },
+  'major-01': { src: './cards/hero-pair-0-hires.avif', position: 'bottom' },
+  'major-02': { src: './cards/hero-pair-1-hires.avif', position: 'top' },
+  'major-03': { src: './cards/hero-pair-1-hires.avif', position: 'bottom' },
+  'major-13': { src: './cards/hero-pair-2-hires.avif', position: 'top' },
+  'major-18': { src: './cards/hero-pair-2-hires.avif', position: 'bottom' },
+  'cups-01': { src: './cards/hero-pair-3-hires.avif', position: 'top' },
+  'swords-03': { src: './cards/hero-pair-3-hires.avif', position: 'bottom' },
+  'wands-06': { src: './cards/hero-pair-4-hires.avif', position: 'top' },
+  'pentacles-13': { src: './cards/hero-pair-4-hires.avif', position: 'bottom' },
 }
 const MAJOR_SCENES = [
   ['cliff', 'white moth', 'tiny suitcase'],
