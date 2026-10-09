@@ -140,7 +140,6 @@ function Bedroom({ onEnter, music, onMusic }) {
 
   return <main className="bedroom">
     <MusicButton on={music} onToggle={onMusic} />
-    <div className="bedroom-reflection" />
     <header>
       <small>the bedroom</small>
       <h1>SOFT ARCANA</h1>
