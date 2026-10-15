@@ -9,7 +9,7 @@ const PALETTES = {
 }
 
 const HERO_ART = {
-  'major-00': { src: './an_ornate_vintage_tarot_card_style_illustration_i.png', position: 'full' },
+  'major-00': { src: 'https://raw.githubusercontent.com/joshielivingston-afk/soft_arcana/main/an_ornate_vintage_tarot_card_style_illustration_i.png', position: 'full' },
   'major-01': { src: './cards/hero-pair-0.avif', position: 'bottom' },
   'major-02': { src: './cards/hero-pair-1.avif', position: 'top' },
   'major-03': { src: './cards/hero-pair-1.avif', position: 'bottom' },
