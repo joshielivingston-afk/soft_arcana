@@ -1,5 +1,5 @@
-const CACHE = 'soft-arcana-v5-9-visible-card-faces'
-const CORE = ["./","./index.html","./manifest.webmanifest","./icon.svg","./cards/hero-pair-0.avif","./cards/hero-pair-1.avif","./cards/hero-pair-2.avif","./cards/hero-pair-3.avif","./cards/hero-pair-4.avif"]
+const CACHE = 'soft-arcana-v6-morute-major-deck'
+const CORE = ["./cards/morute-mirror-back.webp","./cards/the-fool.png","./cards/morute-major-04.webp","./cards/morute-major-05.webp","./cards/morute-major-06.webp","./cards/morute-major-07.webp","./cards/morute-major-08.webp","./cards/morute-major-09.webp","./cards/morute-major-10.webp","./cards/morute-major-11.webp","./cards/morute-major-12.webp","./cards/morute-major-14.webp","./cards/morute-major-15.webp","./cards/morute-major-16.webp","./cards/morute-major-17.webp","./cards/morute-major-19.webp","./cards/morute-major-20.webp","./cards/morute-major-21.webp","./","./index.html","./manifest.webmanifest","./icon.svg","./cards/hero-pair-0.avif","./cards/hero-pair-1.avif","./cards/hero-pair-2.avif","./cards/hero-pair-3.avif","./cards/hero-pair-4.avif"]
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(CORE)))

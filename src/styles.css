@@ -703,3 +703,6 @@ textarea{resize:vertical}
 @media(max-width:720px){
   .polish-after-actions{grid-column:1/-1;margin-top:9px}
 }
+
+/* The selected morute hand mirror, shared by every deck and card back. */
+.mirror-back-design img{display:block;width:100%;height:100%;object-fit:cover}
