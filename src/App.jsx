@@ -468,14 +468,14 @@ function OpenMirror({ interpretations, readings, beneath, wear, onReturn, music,
             return <button
               key={card.id}
               className={'archive-card-tile ' + (waiting ? 'is-beneath' : remembered ? 'is-remembered' : 'is-unremembered')}
-              onClick={() => remembered && setSelected(card)}
+              onClick={() => setSelected(card)}
             >
               <div className="archive-card-object">
                 {waiting && <span className="beneath-ribbon" aria-hidden="true" />}
-                {waiting || !remembered ? <MirrorBack /> : <CardArt card={card} wear={wear[card.id] || 0} />}
+                {waiting ? <MirrorBack /> : <CardArt card={card} wear={wear[card.id] || 0} />}
               </div>
-              <b>{waiting ? card.name : remembered ? card.name : 'unremembered'}</b>
-              <small>{waiting ? 'waiting beneath the mirror' : remembered ? history.length + ' dream' + (history.length === 1 ? '' : 's') : 'still behind the glass'}</small>
+              <b>{card.name}</b>
+              <small>{waiting ? 'waiting beneath the mirror' : remembered ? history.length + ' dream' + (history.length === 1 ? '' : 's') : 'no dreams remembered yet'}</small>
             </button>
           })}
         </section>
